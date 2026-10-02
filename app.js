@@ -11,8 +11,19 @@ const icons = {
   "Note": "📝"
 };
 
+const types = [
+  "Flight",
+  "Car Rental",
+  "Hotel",
+  "Sight",
+  "Meal",
+  "Transport",
+  "Note"
+];
+
 const seed = {
   trips: [{
+    id: "central-japan-2026",
     name: "Central Japan Road Trip",
     destination: "Nagoya • Gero • Takayama • Enakyo",
     start: "2026-10-19",
@@ -20,76 +31,94 @@ const seed = {
 
     items: [
       {
+        id: "item-1",
         type: "Flight",
         title: "Arrive Chubu Centrair Airport",
         date: "2026-10-19",
         time: "10:15",
         location: "Chubu Centrair International Airport (NGO)",
-        notes: "United UA137 from Guam"
+        notes: "United UA137 from Guam",
+        confirmation: ""
       },
       {
+        id: "item-2",
         type: "Car Rental",
         title: "Pick up rental car",
         date: "2026-10-19",
         time: "11:15",
         location: "Chubu Centrair International Airport",
-        notes: ""
+        notes: "",
+        confirmation: ""
       },
       {
+        id: "item-3",
         type: "Sight",
         title: "Inuyama Castle",
         date: "2026-10-19",
         time: "13:00",
         location: "Inuyama Castle",
-        notes: ""
+        notes: "",
+        confirmation: ""
       },
       {
+        id: "item-4",
         type: "Hotel",
         title: "Gero Onsen",
         date: "2026-10-19",
         time: "16:30",
         location: "Gero, Gifu",
-        notes: "2 nights"
+        notes: "2 nights",
+        confirmation: ""
       },
       {
+        id: "item-5",
         type: "Sight",
         title: "Takayama sightseeing",
         date: "2026-10-20",
         time: "09:00",
         location: "Takayama, Gifu",
-        notes: ""
+        notes: "",
+        confirmation: ""
       },
       {
+        id: "item-6",
         type: "Hotel",
         title: "Enakyo Onsen",
         date: "2026-10-21",
         time: "15:30",
         location: "Ena, Gifu",
-        notes: ""
+        notes: "",
+        confirmation: ""
       },
       {
+        id: "item-7",
         type: "Hotel",
         title: "Nagoya hotel",
         date: "2026-10-22",
         time: "16:00",
         location: "Nagoya",
-        notes: "Return rental car"
+        notes: "Return rental car",
+        confirmation: ""
       },
       {
+        id: "item-8",
         type: "Transport",
         title: "μ-SKY Express to NGO",
         date: "2026-10-23",
         time: "07:30",
         location: "Nagoya Station",
-        notes: ""
+        notes: "",
+        confirmation: ""
       },
       {
+        id: "item-9",
         type: "Flight",
         title: "Flight from NGO",
         date: "2026-10-23",
         time: "11:00",
         location: "Chubu Centrair International Airport (NGO)",
-        notes: ""
+        notes: "",
+        confirmation: ""
       }
     ]
   }]
@@ -99,32 +128,83 @@ let data =
   JSON.parse(localStorage.getItem(storeKey) || "null") || seed;
 
 let tab = "trips";
+let currentTripIndex = null;
+
+/* Upgrade old saved data without deleting it */
+
+data.trips.forEach((trip, tripIndex) => {
+
+  if (!trip.id) {
+    trip.id = "trip-" + Date.now() + "-" + tripIndex;
+  }
+
+  if (!trip.items) {
+    trip.items = [];
+  }
+
+  trip.items.forEach((item, itemIndex) => {
+
+    if (!item.id) {
+      item.id =
+        "item-" +
+        Date.now() +
+        "-" +
+        tripIndex +
+        "-" +
+        itemIndex;
+    }
+
+    if (item.confirmation === undefined) {
+      item.confirmation = "";
+    }
+  });
+});
+
+save();
 
 function save() {
   localStorage.setItem(storeKey, JSON.stringify(data));
 }
 
 function formatDate(date) {
-  return new Date(date + "T12:00:00").toLocaleDateString(
-    undefined,
-    {
-      month: "short",
-      day: "numeric",
-      year: "numeric"
-    }
-  );
+
+  if (!date) return "";
+
+  return new Date(date + "T12:00:00")
+    .toLocaleDateString(
+      undefined,
+      {
+        weekday: "short",
+        month: "short",
+        day: "numeric",
+        year: "numeric"
+      }
+    );
 }
 
-function itemRow(item) {
+function escapeHTML(value = "") {
 
-  let mapLink = "";
+  return String(value)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
 
-  if (item.location) {
-    mapLink =
-      `<a href="https://maps.apple.com/?q=${
-        encodeURIComponent(item.location)
-      }">Open in Apple Maps</a>`;
-  }
+function itemRow(item, tripIndex) {
+
+  const mapLink = item.location
+    ? `
+      <a
+        href="https://maps.apple.com/?q=${
+          encodeURIComponent(item.location)
+        }"
+      >
+        Open in Apple Maps
+      </a>
+    `
+    : "";
 
   return `
     <div class="row">
@@ -136,28 +216,62 @@ function itemRow(item) {
       <div class="grow">
 
         <div class="time">
-          ${formatDate(item.date)} • ${item.time}
+          ${formatDate(item.date)}
+          ${item.time ? " • " + escapeHTML(item.time) : ""}
         </div>
 
         <div class="title">
-          ${item.title}
+          ${escapeHTML(item.title)}
         </div>
 
-        <div class="muted">
-          ${item.location || ""}
-        </div>
+        ${
+          item.location
+            ? `
+              <div class="muted">
+                ${escapeHTML(item.location)}
+              </div>
+            `
+            : ""
+        }
+
+        ${
+          item.confirmation
+            ? `
+              <div class="booking">
+                Confirmation:
+                ${escapeHTML(item.confirmation)}
+              </div>
+            `
+            : ""
+        }
 
         ${
           item.notes
-            ? `<div>${item.notes}</div>`
+            ? `
+              <div class="item-notes">
+                ${escapeHTML(item.notes)}
+              </div>
+            `
             : ""
         }
 
-        ${
-          mapLink
-            ? `<div>${mapLink}</div>`
-            : ""
-        }
+        <div class="item-actions">
+
+          ${mapLink}
+
+          <button
+            class="text-button"
+            onclick="
+              editItem(
+                ${tripIndex},
+                '${item.id}'
+              )
+            "
+          >
+            Edit
+          </button>
+
+        </div>
 
       </div>
     </div>
@@ -166,39 +280,97 @@ function itemRow(item) {
 
 function trips() {
 
-  app.innerHTML = data.trips.map((trip, index) => `
+  currentTripIndex = null;
 
-    <div
-      class="hero"
-      onclick="openTrip(${index})"
-    >
+  app.innerHTML = `
 
-      <small>NEXT ADVENTURE</small>
-
-      <h2>${trip.name}</h2>
-
-      <div class="muted">
-        ${trip.destination}
-      </div>
+    <div class="toolbar">
 
       <div>
-        <span class="pill">
-          📅 ${formatDate(trip.start)}
-        </span>
+        <div class="section">
+          My Trips
+        </div>
 
-        <span class="pill">
-          🏁 ${formatDate(trip.end)}
-        </span>
+        <div class="muted">
+          Your offline travel organizer
+        </div>
       </div>
+
+      <button
+        class="small-action"
+        onclick="newTrip()"
+      >
+        + Trip
+      </button>
 
     </div>
 
-  `).join("");
+    ${
+      data.trips.length
+
+      ? data.trips.map((trip, index) => `
+
+          <div
+            class="hero"
+            onclick="openTrip(${index})"
+          >
+
+            <small>
+              ${
+                index === 0
+                  ? "NEXT ADVENTURE"
+                  : "SAVED TRIP"
+              }
+            </small>
+
+            <h2>
+              ${escapeHTML(trip.name)}
+            </h2>
+
+            <div class="muted">
+              ${escapeHTML(trip.destination)}
+            </div>
+
+            <div>
+              <span class="pill">
+                📅 ${formatDate(trip.start)}
+              </span>
+
+              <span class="pill">
+                🏁 ${formatDate(trip.end)}
+              </span>
+            </div>
+
+          </div>
+
+        `).join("")
+
+      : `
+        <div class="card">
+          <b>No trips yet.</b>
+          <p class="muted">
+            Tap + Trip to create your first trip.
+          </p>
+        </div>
+      `
+    }
+  `;
 }
 
 window.openTrip = function(index) {
 
+  currentTripIndex = index;
+
   const trip = data.trips[index];
+
+  const sortedItems =
+    [...trip.items].sort(
+      (a, b) =>
+        ((a.date || "") + (a.time || ""))
+          .localeCompare(
+            (b.date || "") + (b.time || "")
+          )
+    );
 
   app.innerHTML = `
 
@@ -209,34 +381,510 @@ window.openTrip = function(index) {
       ‹ Back to Trips
     </button>
 
-    <div class="section">
-      ${trip.name}
+    <div class="trip-heading">
+
+      <div>
+
+        <div class="section">
+          ${escapeHTML(trip.name)}
+        </div>
+
+        <div class="muted">
+          ${escapeHTML(trip.destination)}
+        </div>
+
+        <div class="trip-dates">
+          ${formatDate(trip.start)}
+          —
+          ${formatDate(trip.end)}
+        </div>
+
+      </div>
+
     </div>
 
-    <div class="muted">
-      ${trip.destination}
+    <div class="trip-controls">
+
+      <button
+        class="action secondary"
+        onclick="editTrip(${index})"
+      >
+        ✏️ Edit Trip
+      </button>
+
+      <button
+        class="action"
+        onclick="newItem(${index})"
+      >
+        ＋ Add Itinerary Item
+      </button>
+
     </div>
 
-    ${
-      trip.items
-        .sort((a,b) =>
-          (a.date+a.time).localeCompare(b.date+b.time)
-        )
-        .map(itemRow)
-        .join("")
-    }
+    <div class="card">
+
+      ${
+        sortedItems.length
+          ? sortedItems
+              .map(item => itemRow(item, index))
+              .join("")
+          : `
+            <div class="empty-message">
+              No itinerary items yet.
+            </div>
+          `
+      }
+
+    </div>
   `;
+};
+
+window.newTrip = function() {
+
+  showTripEditor(null);
+};
+
+window.editTrip = function(index) {
+
+  showTripEditor(index);
+};
+
+function showTripEditor(index) {
+
+  const editing = index !== null;
+
+  const trip = editing
+    ? data.trips[index]
+    : {
+        name: "",
+        destination: "",
+        start: "",
+        end: "",
+        items: []
+      };
+
+  app.innerHTML = `
+
+    <button
+      class="action secondary"
+      onclick="render()"
+    >
+      Cancel
+    </button>
+
+    <div class="section">
+      ${editing ? "Edit Trip" : "New Trip"}
+    </div>
+
+    <div class="form-card">
+
+      <label>Trip name</label>
+
+      <input
+        id="tripName"
+        value="${escapeHTML(trip.name)}"
+        placeholder="Japan Autumn Trip"
+      >
+
+      <label>Destination</label>
+
+      <input
+        id="tripDestination"
+        value="${escapeHTML(trip.destination)}"
+        placeholder="Nagoya • Takayama"
+      >
+
+      <label>Start date</label>
+
+      <input
+        id="tripStart"
+        type="date"
+        value="${trip.start || ""}"
+      >
+
+      <label>End date</label>
+
+      <input
+        id="tripEnd"
+        type="date"
+        value="${trip.end || ""}"
+      >
+
+      <button
+        class="action"
+        onclick="
+          saveTripEditor(
+            ${editing ? index : "null"}
+          )
+        "
+      >
+        Save Trip
+      </button>
+
+      ${
+        editing
+          ? `
+            <button
+              class="danger-button"
+              onclick="deleteTrip(${index})"
+            >
+              Delete Trip
+            </button>
+          `
+          : ""
+      }
+
+    </div>
+  `;
+}
+
+window.saveTripEditor = function(index) {
+
+  const name =
+    document.querySelector("#tripName")
+      .value.trim();
+
+  const destination =
+    document.querySelector("#tripDestination")
+      .value.trim();
+
+  const start =
+    document.querySelector("#tripStart").value;
+
+  const end =
+    document.querySelector("#tripEnd").value;
+
+  if (!name) {
+    alert("Please enter a trip name.");
+    return;
+  }
+
+  if (index === null) {
+
+    data.trips.push({
+      id: "trip-" + Date.now(),
+      name,
+      destination,
+      start,
+      end,
+      items: []
+    });
+
+    currentTripIndex =
+      data.trips.length - 1;
+
+  } else {
+
+    data.trips[index].name = name;
+    data.trips[index].destination = destination;
+    data.trips[index].start = start;
+    data.trips[index].end = end;
+
+    currentTripIndex = index;
+  }
+
+  save();
+
+  openTrip(currentTripIndex);
+};
+
+window.deleteTrip = function(index) {
+
+  const trip = data.trips[index];
+
+  if (
+    !confirm(
+      `Delete "${trip.name}" and its itinerary?`
+    )
+  ) {
+    return;
+  }
+
+  data.trips.splice(index, 1);
+
+  save();
+
+  currentTripIndex = null;
+
+  render();
+};
+
+window.newItem = function(tripIndex) {
+
+  showItemEditor(tripIndex, null);
+};
+
+window.editItem = function(tripIndex, itemID) {
+
+  showItemEditor(tripIndex, itemID);
+};
+
+function showItemEditor(tripIndex, itemID) {
+
+  const trip = data.trips[tripIndex];
+
+  const editing = itemID !== null;
+
+  const item = editing
+    ? trip.items.find(x => x.id === itemID)
+    : {
+        type: "Sight",
+        title: "",
+        date: trip.start || "",
+        time: "",
+        location: "",
+        notes: "",
+        confirmation: ""
+      };
+
+  const typeOptions =
+    types.map(type => `
+      <option
+        value="${type}"
+        ${item.type === type ? "selected" : ""}
+      >
+        ${type}
+      </option>
+    `).join("");
+
+  app.innerHTML = `
+
+    <button
+      class="action secondary"
+      onclick="openTrip(${tripIndex})"
+    >
+      Cancel
+    </button>
+
+    <div class="section">
+      ${
+        editing
+          ? "Edit Itinerary Item"
+          : "Add Itinerary Item"
+      }
+    </div>
+
+    <div class="form-card">
+
+      <label>Type</label>
+
+      <select id="itemType">
+        ${typeOptions}
+      </select>
+
+      <label>Title</label>
+
+      <input
+        id="itemTitle"
+        value="${escapeHTML(item.title)}"
+        placeholder="Hotel, restaurant, attraction..."
+      >
+
+      <div class="two-column">
+
+        <div>
+          <label>Date</label>
+
+          <input
+            id="itemDate"
+            type="date"
+            value="${item.date || ""}"
+          >
+        </div>
+
+        <div>
+          <label>Time</label>
+
+          <input
+            id="itemTime"
+            type="time"
+            value="${item.time || ""}"
+          >
+        </div>
+
+      </div>
+
+      <label>Location</label>
+
+      <input
+        id="itemLocation"
+        value="${escapeHTML(item.location)}"
+        placeholder="Hotel or place name"
+      >
+
+      <label>Confirmation / booking number</label>
+
+      <input
+        id="itemConfirmation"
+        value="${escapeHTML(item.confirmation || "")}"
+        placeholder="Optional"
+      >
+
+      <label>Notes</label>
+
+      <textarea
+        id="itemNotes"
+        rows="5"
+        placeholder="Reservation details, directions, reminders..."
+      >${escapeHTML(item.notes)}</textarea>
+
+      <button
+        class="action"
+        onclick="
+          saveItemEditor(
+            ${tripIndex},
+            ${editing ? `'${itemID}'` : "null"}
+          )
+        "
+      >
+        Save Itinerary Item
+      </button>
+
+      ${
+        editing
+          ? `
+            <button
+              class="danger-button"
+              onclick="
+                deleteItem(
+                  ${tripIndex},
+                  '${itemID}'
+                )
+              "
+            >
+              Delete Itinerary Item
+            </button>
+          `
+          : ""
+      }
+
+    </div>
+  `;
+}
+
+window.saveItemEditor =
+function(tripIndex, itemID) {
+
+  const title =
+    document.querySelector("#itemTitle")
+      .value.trim();
+
+  if (!title) {
+
+    alert(
+      "Please enter a title for this itinerary item."
+    );
+
+    return;
+  }
+
+  const newItem = {
+    id: itemID || "item-" + Date.now(),
+
+    type:
+      document.querySelector("#itemType").value,
+
+    title,
+
+    date:
+      document.querySelector("#itemDate").value,
+
+    time:
+      document.querySelector("#itemTime").value,
+
+    location:
+      document.querySelector("#itemLocation")
+        .value.trim(),
+
+    confirmation:
+      document.querySelector("#itemConfirmation")
+        .value.trim(),
+
+    notes:
+      document.querySelector("#itemNotes")
+        .value.trim()
+  };
+
+  const trip = data.trips[tripIndex];
+
+  if (itemID) {
+
+    const index =
+      trip.items.findIndex(
+        item => item.id === itemID
+      );
+
+    trip.items[index] = newItem;
+
+  } else {
+
+    trip.items.push(newItem);
+  }
+
+  save();
+
+  openTrip(tripIndex);
+};
+
+window.deleteItem =
+function(tripIndex, itemID) {
+
+  const trip = data.trips[tripIndex];
+
+  const item =
+    trip.items.find(
+      x => x.id === itemID
+    );
+
+  if (
+    !confirm(
+      `Delete "${item.title}"?`
+    )
+  ) {
+    return;
+  }
+
+  trip.items =
+    trip.items.filter(
+      x => x.id !== itemID
+    );
+
+  save();
+
+  openTrip(tripIndex);
 };
 
 function today() {
 
-  const date =
-    new Date().toISOString().slice(0,10);
+  currentTripIndex = null;
 
-  const items =
-    data.trips
-      .flatMap(trip => trip.items)
-      .filter(item => item.date === date);
+  const date =
+    new Date().toISOString().slice(0, 10);
+
+  const matches = [];
+
+  data.trips.forEach(
+    (trip, tripIndex) => {
+
+      trip.items.forEach(item => {
+
+        if (item.date === date) {
+
+          matches.push({
+            item,
+            tripIndex,
+            tripName: trip.name
+          });
+        }
+      });
+    }
+  );
+
+  matches.sort(
+    (a, b) =>
+      (a.item.time || "")
+        .localeCompare(b.item.time || "")
+  );
 
   app.innerHTML = `
 
@@ -244,17 +892,38 @@ function today() {
       Today
     </div>
 
+    <div class="muted today-date">
+      ${formatDate(date)}
+    </div>
+
     ${
-      items.length
-      ? items.map(itemRow).join("")
+      matches.length
+
+      ? `
+        <div class="card">
+
+          ${
+            matches
+              .map(match =>
+                itemRow(
+                  match.item,
+                  match.tripIndex
+                )
+              )
+              .join("")
+          }
+
+        </div>
+      `
+
       : `
         <div class="card">
 
           <b>Nothing scheduled today</b>
 
           <p class="muted">
-            Your itinerary will automatically
-            appear here during your trip.
+            Your itinerary will appear here
+            automatically during your trip.
           </p>
 
         </div>
@@ -264,6 +933,23 @@ function today() {
 }
 
 function days() {
+
+  currentTripIndex = null;
+
+  if (!data.trips.length) {
+
+    app.innerHTML = `
+      <div class="section">
+        Trip Days
+      </div>
+
+      <div class="card">
+        No trips yet.
+      </div>
+    `;
+
+    return;
+  }
 
   const trip = data.trips[0];
 
@@ -284,6 +970,10 @@ function days() {
       Trip Days
     </div>
 
+    <div class="muted days-trip-name">
+      ${escapeHTML(trip.name)}
+    </div>
+
     ${
       Object.keys(groups)
         .sort()
@@ -291,13 +981,20 @@ function days() {
 
           <div class="card">
 
-            <b>
+            <div class="day-heading">
               ${formatDate(date)}
-            </b>
+            </div>
 
             ${
               groups[date]
-                .map(itemRow)
+                .sort(
+                  (a,b) =>
+                    (a.time || "")
+                      .localeCompare(b.time || "")
+                )
+                .map(item =>
+                  itemRow(item, 0)
+                )
                 .join("")
             }
 
@@ -311,6 +1008,8 @@ function days() {
 
 function backup() {
 
+  currentTripIndex = null;
+
   app.innerHTML = `
 
     <div class="section">
@@ -322,9 +1021,8 @@ function backup() {
       <b>Protect your travel information</b>
 
       <p class="muted">
-        Export a backup before your trip
-        and save it in your iPhone Files
-        or iCloud Drive.
+        Export a backup before your trip.
+        Save it in Files or iCloud Drive.
       </p>
 
       <button
@@ -337,7 +1035,9 @@ function backup() {
       <button
         class="action secondary"
         onclick="
-          document.querySelector('#restore').click()
+          document
+            .querySelector('#restore')
+            .click()
         "
       >
         Restore Backup
@@ -347,18 +1047,17 @@ function backup() {
 
     <div class="card">
 
-      <b>Offline Travel Test</b>
+      <b>Offline Ready</b>
 
       <p class="muted">
-        After My Travel is installed on
-        your iPhone, open it once while
-        connected to the internet.
+        My Travel stores your itinerary
+        on this device and can operate
+        without an internet connection.
       </p>
 
       <p class="muted">
-        Then turn on Airplane Mode and
-        confirm Trips, Today and Days
-        still work.
+        Apple Maps links require map data
+        to be available separately.
       </p>
 
     </div>
@@ -370,7 +1069,7 @@ window.exportData = function() {
   const blob =
     new Blob(
       [JSON.stringify(data, null, 2)],
-      {type: "application/json"}
+      { type: "application/json" }
     );
 
   const url =
@@ -389,7 +1088,8 @@ window.exportData = function() {
   URL.revokeObjectURL(url);
 };
 
-document.querySelector("#restore")
+document
+  .querySelector("#restore")
   .addEventListener(
     "change",
     async event => {
@@ -399,16 +1099,26 @@ document.querySelector("#restore")
         const file =
           event.target.files[0];
 
-        data =
+        if (!file) return;
+
+        const restored =
           JSON.parse(
             await file.text()
           );
+
+        if (!restored.trips) {
+          throw new Error();
+        }
+
+        data = restored;
 
         save();
 
         alert(
           "My Travel backup restored."
         );
+
+        tab = "trips";
 
         render();
 
@@ -431,7 +1141,6 @@ function render() {
         "active",
         button.dataset.tab === tab
       );
-
     });
 
   if (tab === "trips") trips();
@@ -453,14 +1162,18 @@ document
         render();
       }
     );
-
   });
 
 if ("serviceWorker" in navigator) {
 
   navigator.serviceWorker
-    .register("sw.js");
-
+    .register("sw.js")
+    .catch(error => {
+      console.log(
+        "Service worker:",
+        error
+      );
+    });
 }
 
 save();
