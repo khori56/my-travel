@@ -1,4 +1,4 @@
-const CACHE = "mytravel-v1";
+const CACHE = "mytravel-v2";
 
 const FILES = [
   "./",
