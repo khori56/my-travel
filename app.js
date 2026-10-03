@@ -1178,3 +1178,134 @@ if ("serviceWorker" in navigator) {
 
 save();
 render();
+/* =========================================================
+   MY TRAVEL v3 — OFFLINE DOCUMENTS & PHOTOS WALLET
+   Files are stored locally on this device using IndexedDB.
+   ========================================================= */
+
+const WALLET_DB = "mytravel-wallet";
+const WALLET_VERSION = 1;
+const WALLET_STORE = "files";
+
+function openWalletDB() {
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open(WALLET_DB, WALLET_VERSION);
+
+    request.onupgradeneeded = event => {
+      const db = event.target.result;
+
+      if (!db.objectStoreNames.contains(WALLET_STORE)) {
+        const store = db.createObjectStore(WALLET_STORE, {
+          keyPath: "id"
+        });
+
+        store.createIndex("tripId", "tripId", { unique: false });
+        store.createIndex("category", "category", { unique: false });
+        store.createIndex("created", "created", { unique: false });
+      }
+    };
+
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => reject(request.error);
+  });
+}
+
+async function saveWalletFile(record) {
+  const db = await openWalletDB();
+
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(WALLET_STORE, "readwrite");
+    const store = tx.objectStore(WALLET_STORE);
+
+    store.put(record);
+
+    tx.oncomplete = () => {
+      db.close();
+      resolve();
+    };
+
+    tx.onerror = () => {
+      db.close();
+      reject(tx.error);
+    };
+  });
+}
+
+async function getWalletFiles(tripId = null) {
+  const db = await openWalletDB();
+
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(WALLET_STORE, "readonly");
+    const store = tx.objectStore(WALLET_STORE);
+    const request = store.getAll();
+
+    request.onsuccess = () => {
+      let records = request.result || [];
+
+      if (tripId) {
+        records = records.filter(record => record.tripId === tripId);
+      }
+
+      records.sort((a, b) =>
+        new Date(b.created) - new Date(a.created)
+      );
+
+      db.close();
+      resolve(records);
+    };
+
+    request.onerror = () => {
+      db.close();
+      reject(request.error);
+    };
+  });
+}
+
+async function getWalletFile(id) {
+  const db = await openWalletDB();
+
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(WALLET_STORE, "readonly");
+    const request = tx.objectStore(WALLET_STORE).get(id);
+
+    request.onsuccess = () => {
+      db.close();
+      resolve(request.result);
+    };
+
+    request.onerror = () => {
+      db.close();
+      reject(request.error);
+    };
+  });
+}
+
+async function deleteWalletFile(id) {
+  const db = await openWalletDB();
+
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(WALLET_STORE, "readwrite");
+    tx.objectStore(WALLET_STORE).delete(id);
+
+    tx.oncomplete = () => {
+      db.close();
+      resolve();
+    };
+
+    tx.onerror = () => {
+      db.close();
+      reject(tx.error);
+    };
+  });
+}
+
+function walletFileId() {
+  if (crypto.randomUUID) {
+    return crypto.randomUUID();
+  }
+
+  return "wallet-" +
+    Date.now() +
+    "-" +
+    Math.random().toString(36).slice(2);
+}
