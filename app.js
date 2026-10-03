@@ -1309,3 +1309,269 @@ function walletFileId() {
     "-" +
     Math.random().toString(36).slice(2);
 }
+/* =========================================================
+   MY TRAVEL v3 — WALLET USER INTERFACE
+   ========================================================= */
+
+async function wallet() {
+  const app = document.getElementById("app");
+  const files = await getWalletFiles();
+
+  const documentCount = files.filter(f => f.category === "document").length;
+  const photoCount = files.filter(f => f.category === "photo").length;
+
+  app.innerHTML = `
+    <div class="toolbar">
+      <div>
+        <div class="section">Travel Wallet</div>
+        <div class="muted">
+          Documents and photos stored offline on this device
+        </div>
+      </div>
+    </div>
+
+    <div class="wallet-summary">
+      <div class="wallet-stat">
+        <div class="wallet-stat-number">${documentCount}</div>
+        <div class="wallet-stat-label">Documents</div>
+      </div>
+
+      <div class="wallet-stat">
+        <div class="wallet-stat-number">${photoCount}</div>
+        <div class="wallet-stat-label">Photos</div>
+      </div>
+    </div>
+
+    <div class="wallet-actions">
+      <button class="wallet-add-button" onclick="chooseWalletFile('document')">
+        <span class="wallet-add-icon">📄</span>
+        <span>
+          <strong>Add Document</strong>
+          <small>PDF, ticket, confirmation or other file</small>
+        </span>
+      </button>
+
+      <button class="wallet-add-button" onclick="chooseWalletFile('photo')">
+        <span class="wallet-add-icon">📷</span>
+        <span>
+          <strong>Add Photo</strong>
+          <small>Photo Library or Camera</small>
+        </span>
+      </button>
+    </div>
+
+    <input
+      id="walletDocumentPicker"
+      type="file"
+      accept=".pdf,image/*"
+      style="display:none"
+      onchange="walletFileSelected(event,'document')"
+    >
+
+    <input
+      id="walletPhotoPicker"
+      type="file"
+      accept="image/*"
+      style="display:none"
+      onchange="walletFileSelected(event,'photo')"
+    >
+
+    <div class="wallet-section-title">
+      Saved Items
+    </div>
+
+    <div id="walletItems">
+      ${walletItemsHTML(files)}
+    </div>
+  `;
+}
+
+function chooseWalletFile(category) {
+  if (category === "photo") {
+    document.getElementById("walletPhotoPicker").click();
+  } else {
+    document.getElementById("walletDocumentPicker").click();
+  }
+}
+
+function walletItemsHTML(files) {
+  if (!files.length) {
+    return `
+      <div class="form-card wallet-empty">
+        <div class="wallet-empty-icon">🧳</div>
+        <strong>Your Travel Wallet is empty</strong>
+        <div class="muted">
+          Add hotel confirmations, tickets, PDFs and trip photos.
+        </div>
+      </div>
+    `;
+  }
+
+  return files.map(file => {
+    const trip = data.trips.find(t => t.id === file.tripId);
+    const tripName = trip ? trip.name : "General Travel";
+
+    const icon =
+      file.category === "photo" ? "📷" :
+      file.type === "application/pdf" ? "📕" :
+      "📄";
+
+    return `
+      <div class="form-card wallet-file-card">
+        <div class="wallet-file-row">
+          <div class="wallet-file-icon">${icon}</div>
+
+          <div class="wallet-file-info">
+            <strong>${escapeHTML(file.name)}</strong>
+            <div class="muted">${escapeHTML(tripName)}</div>
+            <div class="wallet-file-meta">
+              ${formatWalletSize(file.size)}
+            </div>
+          </div>
+        </div>
+
+        <div class="item-actions">
+          <button
+            class="text-button"
+            onclick="openWalletItem('${file.id}')">
+            Open
+          </button>
+
+          <button
+            class="text-button"
+            onclick="renameWalletItem('${file.id}')">
+            Rename
+          </button>
+
+          <button
+            class="text-button wallet-delete-link"
+            onclick="removeWalletItem('${file.id}')">
+            Delete
+          </button>
+        </div>
+      </div>
+    `;
+  }).join("");
+}
+
+function formatWalletSize(bytes) {
+  if (!bytes) return "";
+
+  if (bytes < 1024) {
+    return bytes + " B";
+  }
+
+  if (bytes < 1024 * 1024) {
+    return (bytes / 1024).toFixed(1) + " KB";
+  }
+
+  return (bytes / (1024 * 1024)).toFixed(1) + " MB";
+}
+
+async function walletFileSelected(event, category) {
+  const selected = event.target.files[0];
+
+  if (!selected) return;
+
+  let tripId = "";
+
+  if (data.trips.length === 1) {
+    tripId = data.trips[0].id;
+  } else if (data.trips.length > 1) {
+    const choices = data.trips
+      .map((trip, index) => `${index + 1}. ${trip.name}`)
+      .join("\n");
+
+    const answer = prompt(
+      "Which trip should this belong to?\n\n" +
+      choices +
+      "\n\nEnter the trip number:"
+    );
+
+    const tripNumber = Number(answer) - 1;
+
+    if (
+      tripNumber >= 0 &&
+      tripNumber < data.trips.length
+    ) {
+      tripId = data.trips[tripNumber].id;
+    }
+  }
+
+  const record = {
+    id: walletFileId(),
+    tripId: tripId,
+    category: category,
+    name: selected.name || (
+      category === "photo"
+        ? "Travel Photo"
+        : "Travel Document"
+    ),
+    type: selected.type || "application/octet-stream",
+    size: selected.size,
+    created: new Date().toISOString(),
+    blob: selected
+  };
+
+  try {
+    await saveWalletFile(record);
+    await wallet();
+  } catch (error) {
+    console.error(error);
+    alert(
+      "My Travel could not save this file. " +
+      "Please try a smaller file."
+    );
+  }
+
+  event.target.value = "";
+}
+
+async function openWalletItem(id) {
+  const file = await getWalletFile(id);
+
+  if (!file || !file.blob) {
+    alert("This file could not be opened.");
+    return;
+  }
+
+  const url = URL.createObjectURL(file.blob);
+  window.open(url, "_blank");
+
+  setTimeout(() => {
+    URL.revokeObjectURL(url);
+  }, 60000);
+}
+
+async function renameWalletItem(id) {
+  const file = await getWalletFile(id);
+
+  if (!file) return;
+
+  const newName = prompt(
+    "Rename this item:",
+    file.name
+  );
+
+  if (!newName || !newName.trim()) return;
+
+  file.name = newName.trim();
+
+  await saveWalletFile(file);
+  await wallet();
+}
+
+async function removeWalletItem(id) {
+  const file = await getWalletFile(id);
+
+  if (!file) return;
+
+  const confirmed = confirm(
+    `Delete "${file.name}" from this device?`
+  );
+
+  if (!confirmed) return;
+
+  await deleteWalletFile(id);
+  await wallet();
+}
