@@ -1,10 +1,10 @@
-const CACHE = "mytravel-v4";
+const CACHE = "mytravel-v5";
 
 const FILES = [
   "./",
   "index.html",
   "styles.css",
-"app.js?v=3",
+"app.js?v=4",
   "manifest.webmanifest",
   "icon.svg"
 ];
