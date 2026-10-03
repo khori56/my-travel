@@ -329,3 +329,152 @@ a {
     gap: 0;
   }
 }
+/* =========================================================
+   MY TRAVEL v3 — DOCUMENTS & PHOTOS WALLET
+   ========================================================= */
+
+.wallet-summary {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.wallet-stat {
+  background: white;
+  border-radius: 18px;
+  padding: 16px;
+  text-align: center;
+  box-shadow: 0 8px 25px #11223311;
+}
+
+.wallet-stat-number {
+  font-size: 28px;
+  font-weight: 850;
+  color: #172033;
+}
+
+.wallet-stat-label {
+  margin-top: 3px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #667085;
+}
+
+.wallet-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 22px;
+}
+
+.wallet-add-button {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 82px;
+  border: 0;
+  border-radius: 18px;
+  padding: 14px;
+  background: #0877e8;
+  color: white;
+  text-align: left;
+  font-family: inherit;
+  box-shadow: 0 8px 22px #0877e826;
+}
+
+.wallet-add-button:active {
+  transform: scale(0.98);
+}
+
+.wallet-add-icon {
+  font-size: 28px;
+}
+
+.wallet-add-button strong {
+  display: block;
+  font-size: 15px;
+}
+
+.wallet-add-button small {
+  display: block;
+  margin-top: 4px;
+  font-size: 11px;
+  line-height: 1.25;
+  opacity: 0.85;
+}
+
+.wallet-section-title {
+  margin: 4px 2px 10px;
+  font-size: 17px;
+  font-weight: 800;
+  color: #172033;
+}
+
+.wallet-empty {
+  padding: 28px 18px;
+  text-align: center;
+}
+
+.wallet-empty-icon {
+  margin-bottom: 10px;
+  font-size: 38px;
+}
+
+.wallet-empty .muted {
+  margin-top: 6px;
+}
+
+.wallet-file-card {
+  padding: 15px;
+}
+
+.wallet-file-row {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+}
+
+.wallet-file-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  flex: 0 0 48px;
+  border-radius: 14px;
+  background: #edf5ff;
+  font-size: 25px;
+}
+
+.wallet-file-info {
+  min-width: 0;
+  flex: 1;
+}
+
+.wallet-file-info strong {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.wallet-file-meta {
+  margin-top: 3px;
+  font-size: 12px;
+  color: #8a94a3;
+}
+
+.wallet-delete-link {
+  color: #b42318;
+}
+
+@media (max-width: 390px) {
+  .wallet-actions {
+    grid-template-columns: 1fr;
+  }
+
+  .wallet-add-button {
+    min-height: 70px;
+  }
+}
