@@ -1146,6 +1146,7 @@ function render() {
   if (tab === "trips") trips();
   if (tab === "today") today();
   if (tab === "days") days();
+  if (tab === "wallet") wallet();
   if (tab === "backup") backup();
 }
 
