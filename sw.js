@@ -4,7 +4,7 @@ const FILES = [
   "./",
   "index.html",
   "styles.css",
-"app.js?v=4",
+"app.js?v=5",
   "manifest.webmanifest",
   "icon.svg"
 ];
