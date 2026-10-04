@@ -36,7 +36,6 @@ async function openWalletItem(id) {
     console.error("Wallet open error:", error);
     alert("My Travel could not open this file.");
   }
-}
 
 function showWalletViewer(title, content, objectURL) {
   const viewer = document.createElement("div");
