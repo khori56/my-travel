@@ -1537,11 +1537,77 @@ async function openWalletItem(id) {
   }
 
   const url = URL.createObjectURL(file.blob);
-  window.open(url, "_blank");
 
-  setTimeout(() => {
+  const viewer = document.createElement("div");
+  viewer.style.position = "fixed";
+  viewer.style.inset = "0";
+  viewer.style.zIndex = "9999";
+  viewer.style.background = "#ffffff";
+  viewer.style.display = "flex";
+  viewer.style.flexDirection = "column";
+
+  const header = document.createElement("div");
+  header.style.display = "flex";
+  header.style.alignItems = "center";
+  header.style.justifyContent = "space-between";
+  header.style.padding = "12px 16px";
+  header.style.borderBottom = "1px solid #ddd";
+  header.style.background = "#ffffff";
+
+  const title = document.createElement("strong");
+  title.textContent = file.name || "Travel Wallet";
+
+  const done = document.createElement("button");
+  done.textContent = "Done";
+  done.className = "small-action";
+
+  header.appendChild(title);
+  header.appendChild(done);
+
+  const content = document.createElement("div");
+  content.style.flex = "1";
+  content.style.minHeight = "0";
+  content.style.overflow = "auto";
+  content.style.display = "flex";
+  content.style.alignItems = "center";
+  content.style.justifyContent = "center";
+  content.style.background = "#f4f7fb";
+
+  if (
+    file.category === "photo" ||
+    (file.type && file.type.startsWith("image/"))
+  ) {
+    const img = document.createElement("img");
+    img.src = url;
+    img.alt = file.name || "Travel photo";
+    img.style.maxWidth = "100%";
+    img.style.maxHeight = "100%";
+    img.style.objectFit = "contain";
+    content.appendChild(img);
+  } else if (file.type === "application/pdf") {
+    const frame = document.createElement("iframe");
+    frame.src = url;
+    frame.style.width = "100%";
+    frame.style.height = "100%";
+    frame.style.border = "0";
+    content.appendChild(frame);
+  } else {
+    const link = document.createElement("a");
+    link.href = url;
+    link.textContent = "Open document";
+    link.target = "_blank";
+    link.rel = "noopener";
+    content.appendChild(link);
+  }
+
+  viewer.appendChild(header);
+  viewer.appendChild(content);
+  document.body.appendChild(viewer);
+
+  done.addEventListener("click", () => {
+    viewer.remove();
     URL.revokeObjectURL(url);
-  }, 60000);
+  });
 }
 
 async function renameWalletItem(id) {
