@@ -1310,6 +1310,18 @@ function walletFileId() {
     "-" +
     Math.random().toString(36).slice(2);
 }
+function walletPhotoThumbnail(file) {
+  if (
+    file.category !== "photo" ||
+    !file.blob ||
+    !file.blob.type.startsWith("image/")
+  ) {
+    return null;
+  }
+
+  return URL.createObjectURL(file.blob);
+}
+
 /* =========================================================
    MY TRAVEL v3 — WALLET USER INTERFACE
    ========================================================= */
