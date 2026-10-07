@@ -1432,7 +1432,15 @@ function walletItemsHTML(files) {
     return `
       <div class="form-card wallet-file-card">
         <div class="wallet-file-row">
-          <div class="wallet-file-icon">${icon}</div>
+   
+<div class="wallet-file-icon">
+  ${file.category === "photo" && file.blob
+    ? `<img src="${walletPhotoThumbnail(file)}"
+            alt="Photo preview"
+            style="width:72px;height:72px;object-fit:cover;border-radius:10px;">`
+    : icon}
+</div>
+
 
           <div class="wallet-file-info">
             <strong>${escapeHTML(file.name)}</strong>
