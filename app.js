@@ -800,10 +800,18 @@ function(tripIndex, itemID) {
       document.querySelector("#itemConfirmation")
         .value.trim(),
 
-    notes:
-      document.querySelector("#itemNotes")
-        .value.trim()
-  };
+   notes:
+  document.querySelector("#itemNotes")
+    .value.trim(),
+
+walletFileIds: itemID
+  ? (
+      data.trips[tripIndex].items.find(
+        item => item.id === itemID
+      )?.walletFileIds || []
+    )
+  : []
+};
 
   const trip = data.trips[tripIndex];
 
