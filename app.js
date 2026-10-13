@@ -800,9 +800,17 @@ function(tripIndex, itemID) {
       document.querySelector("#itemConfirmation")
         .value.trim(),
 
-   notes:
+  notes:
   document.querySelector("#itemNotes")
     .value.trim(),
+
+walletFileIds: itemID
+  ? (
+      data.trips[tripIndex].items.find(
+        item => item.id === itemID
+      )?.walletFileIds || []
+    )
+  : []
 
 walletFileIds: itemID
   ? (
