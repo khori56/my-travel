@@ -257,6 +257,15 @@ function itemRow(item, tripIndex) {
 
         <div class="item-actions">
 
+${(item.walletFileIds || []).map((fileId, index) => `
+  <button
+    class="text-button"
+    onclick="openWalletItem('${fileId}')"
+  >
+    📎 Open Attachment ${index + 1}
+  </button>
+`).join("")}
+
           ${mapLink}
 
           <button
