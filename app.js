@@ -1692,3 +1692,64 @@ async function removeWalletItem(id) {
   await deleteWalletFile(id);
   await wallet();
 }
+
+
+window.chooseItemWalletAttachments = async function(tripIndex, itemID) {
+  if (!itemID || itemID === "null") {
+    alert("Save the itinerary item first, then reopen it to attach Wallet files.");
+    return;
+  }
+
+  try {
+    const files = await getWalletFiles();
+
+    if (!files.length) {
+      alert("Your Travel Wallet is empty. Add photos or PDFs to Wallet first.");
+      return;
+    }
+
+    const trip = data.trips[tripIndex];
+    const item = trip?.items.find(x => x.id === itemID);
+
+    if (!item) {
+      alert("Itinerary item not found.");
+      return;
+    }
+
+    const choices = files.map((file, index) =>
+      `${index + 1}. ${file.name}`
+    ).join("\n");
+
+    const answer = prompt(
+      "Enter the number of the Wallet file to attach:\n\n" + choices
+    );
+
+    if (answer === null) return;
+
+    const number = Number(answer);
+
+    if (!Number.isInteger(number) ||
+        number < 1 ||
+        number > files.length) {
+      alert("Please enter a valid file number.");
+      return;
+    }
+
+    const selectedFile = files[number - 1];
+
+    if (!Array.isArray(item.walletFileIds)) {
+      item.walletFileIds = [];
+    }
+
+    if (!item.walletFileIds.includes(selectedFile.id)) {
+      item.walletFileIds.push(selectedFile.id);
+      save();
+    }
+
+    alert("Attached: " + selectedFile.name);
+    showItemEditor(tripIndex, itemID);
+
+  } catch (error) {
+    alert("Could not attach Wallet file: " + error.message);
+  }
+};
