@@ -735,7 +735,9 @@ function showItemEditor(tripIndex, itemID) {
   </div>
   <button type="button"
           class="action secondary"
-          onclick="chooseItemWalletAttachments()">
+          
+onclick="chooseItemWalletAttachments(${tripIndex}, '${itemID}')"
+
     📎 Attach from Wallet
   </button>
 </div>
