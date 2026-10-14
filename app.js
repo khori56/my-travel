@@ -728,6 +728,18 @@ function showItemEditor(tripIndex, itemID) {
         placeholder="Reservation details, directions, reminders..."
       >${escapeHTML(item.notes)}</textarea>
 
+<div class="form-card">
+  <label>Travel Wallet Attachments</label>
+  <div id="itemWalletAttachments" class="muted">
+    No documents attached yet.
+  </div>
+  <button type="button"
+          class="action secondary"
+          onclick="chooseItemWalletAttachments()">
+    📎 Attach from Wallet
+  </button>
+</div>
+
       <button
         class="action"
         onclick="
