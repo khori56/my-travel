@@ -826,13 +826,6 @@ walletFileIds: itemID
     )
   : []
 
-walletFileIds: itemID
-  ? (
-      data.trips[tripIndex].items.find(
-        item => item.id === itemID
-      )?.walletFileIds || []
-    )
-  : []
 };
 
   const trip = data.trips[tripIndex];
